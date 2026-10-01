@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getProducts } from '../services/productService';
 import { getCategories } from '../services/categoryService';
+import { useCart } from '../hooks/useCart';
 import ProductCard from '../components/ProductCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
@@ -8,9 +9,9 @@ import EmptyState from '../components/EmptyState';
 
 /**
  * ProductsPage: Fetches and displays products catalog from Express API.
- * Handles loading, error, and empty states.
+ * Supports adding items to cart, category filtering, search, and state handling.
  */
-export const ProductsPage = ({ refreshTrigger = 0 }) => {
+export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +19,9 @@ export const ProductsPage = ({ refreshTrigger = 0 }) => {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [localTrigger, setLocalTrigger] = useState(0);
+  const [notification, setNotification] = useState(null);
+
+  const { addToCart } = useCart();
 
   const handleRetry = useCallback(() => {
     setLoading(true);
@@ -39,7 +43,6 @@ export const ProductsPage = ({ refreshTrigger = 0 }) => {
 
         if (productsRes.status === 'fulfilled') {
           const prodData = productsRes.value;
-          // Backend responds with { success: true, count: N, data: [...] }
           setProducts(Array.isArray(prodData?.data) ? prodData.data : []);
         } else {
           throw productsRes.reason;
@@ -70,6 +73,30 @@ export const ProductsPage = ({ refreshTrigger = 0 }) => {
     };
   }, [refreshTrigger, localTrigger]);
 
+  // Handle Add to Cart action with feedback
+  const handleAddToCart = async (productId, quantity = 1) => {
+    try {
+      setNotification(null);
+      await addToCart(productId, quantity);
+      const addedProduct = products.find((p) => p.id === productId);
+      setNotification({
+        type: 'success',
+        message: `${addedProduct ? addedProduct.name : 'Item'} added to your cart.`,
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.userMessage || 'Failed to add item to cart.',
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+    }
+  };
+
   // Client-side filtering by category and search term
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -89,13 +116,46 @@ export const ProductsPage = ({ refreshTrigger = 0 }) => {
 
   return (
     <div className="space-y-8">
+      {/* Toast Notification Banner */}
+      {notification && (
+        <div
+          className={`p-4 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm transition-all animate-in fade-in slide-in-from-top-2 ${
+            notification.type === 'success'
+              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+              : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {notification.type === 'success' ? (
+              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+          </div>
+
+          {notification.type === 'success' && onNavigateToCart && (
+            <button
+              onClick={onNavigateToCart}
+              className="ml-3 underline hover:no-underline font-bold text-emerald-700 dark:text-emerald-300"
+            >
+              View Cart &rarr;
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Hero / Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 mb-2">
-            <span>Phase 8</span>
+            <span>Phase 9</span>
             <span>&bull;</span>
-            <span>REST API Integration</span>
+            <span>Live Catalog &amp; Cart</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Products Catalog
@@ -211,7 +271,11 @@ export const ProductsPage = ({ refreshTrigger = 0 }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={handleAddToCart}
+            />
           ))}
         </div>
       )}

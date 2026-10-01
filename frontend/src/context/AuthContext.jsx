@@ -1,6 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, logout as authLogout, getToken } from '../services/authService';
+import {
+  getCurrentUser,
+  login as apiLogin,
+  register as apiRegister,
+  logout as authLogout,
+  getToken,
+} from '../services/authService';
 
 export const AuthContext = createContext(null);
 
@@ -41,13 +47,39 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  const login = async (credentials) => {
+    const response = await apiLogin(credentials);
+    if (response?.data?.user) {
+      setUser(response.data.user);
+    }
+    return response;
+  };
+
+  const register = async (userData) => {
+    const response = await apiRegister(userData);
+    if (response?.data?.user) {
+      setUser(response.data.user);
+    }
+    return response;
+  };
+
   const logout = () => {
     authLogout();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

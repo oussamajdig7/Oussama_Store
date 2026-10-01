@@ -3,10 +3,15 @@ import Navbar from '../components/Navbar';
 /**
  * Main application layout with header, responsive container, and footer.
  */
-export const MainLayout = ({ children, onRefresh, loading }) => {
+export const MainLayout = ({ children, currentView, onNavigate, onRefresh, loading }) => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors">
-      <Navbar onRefresh={onRefresh} loading={loading} />
+      <Navbar
+        currentView={currentView}
+        onNavigate={onNavigate}
+        onRefresh={onRefresh}
+        loading={loading}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
