@@ -131,6 +131,27 @@ export const Navbar = ({ currentView, onNavigate, onRefresh, loading }) => {
                 <span className="hidden sm:inline">Orders</span>
               </button>
             )}
+
+            {/* Admin Dashboard Navigation Button */}
+            {isAuthenticated && user?.role === 'admin' ? (
+              <button
+                onClick={() => onNavigate('admin')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Admin Portal</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => onNavigate('admin')}
+                title="Access Admin Console"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+              >
+                <span>Admin</span>
+              </button>
+            )}
           </nav>
 
           {/* Right Status Actions & User Info */}
@@ -138,8 +159,13 @@ export const Navbar = ({ currentView, onNavigate, onRefresh, loading }) => {
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className={`w-2 h-2 rounded-full ${user?.role === 'admin' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
                   <span className="truncate max-w-[120px]">{user?.name || user?.email}</span>
+                  {user?.role === 'admin' && (
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-600 text-white uppercase">
+                      Admin
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -151,13 +177,24 @@ export const Navbar = ({ currentView, onNavigate, onRefresh, loading }) => {
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={handleDemoSignIn}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 transition-colors cursor-pointer"
-              >
-                Sign In (Demo)
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDemoSignIn}
+                  title="Sign in as normal customer (oussama@example.com)"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                >
+                  Sign In (User)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => login({ email: 'admin@example.com', password: 'Admin123!' })}
+                  title="Sign in as Administrator (admin@example.com)"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs shadow-indigo-600/30 transition-colors cursor-pointer"
+                >
+                  Sign In (Admin)
+                </button>
+              </div>
             )}
 
             {onRefresh && currentView === 'products' && (

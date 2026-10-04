@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const adminMiddleware = require("../middleware/adminMiddleware");
 
 const {
     getAllCategories,
@@ -11,8 +12,8 @@ const {
 
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
-router.post("/", createCategory);
-router.put("/:id", updateCategory);
-router.delete("/:id", deleteCategory);
+router.post("/", adminMiddleware, createCategory);
+router.put("/:id", adminMiddleware, updateCategory);
+router.delete("/:id", adminMiddleware, deleteCategory);
 
 module.exports = router;
