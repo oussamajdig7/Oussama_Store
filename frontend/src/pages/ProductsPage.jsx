@@ -4,6 +4,7 @@ import { getProducts } from '../services/productService';
 import { getCategories } from '../services/categoryService';
 import { useCart } from '../hooks/useCart';
 import ProductCard from '../components/ProductCard';
+import Pagination from '../components/Pagination';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import EmptyState from '../components/EmptyState';
@@ -17,12 +18,16 @@ import { formatCurrency } from '../utils/formatters';
 export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Extract filters from URL query parameters
+  // Extract filters and pagination from URL query parameters
   const currentSearch = searchParams.get('search') || '';
   const currentCategory = searchParams.get('category') || 'all';
   const currentMinPrice = searchParams.get('minPrice') || '';
   const currentMaxPrice = searchParams.get('maxPrice') || '';
   const currentSort = searchParams.get('sort') || 'newest';
+  const rawPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentPage = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+  const rawLimit = parseInt(searchParams.get('limit') || '12', 10);
+  const currentLimit = isNaN(rawLimit) || rawLimit < 1 ? 12 : Math.min(rawLimit, 100);
 
   // Local state for smooth debounced search and price inputs
   const [searchInput, setSearchInput] = useState(currentSearch);
@@ -32,6 +37,12 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState({
+    page: currentPage,
+    limit: currentLimit,
+    total: 0,
+    totalPages: 1,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -71,7 +82,7 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
     };
   }, []);
 
-  // Fetch products from backend whenever URL filters change
+  // Fetch products from backend whenever URL filters or pagination change
   useEffect(() => {
     let isMounted = true;
 
@@ -80,7 +91,10 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
         setLoading(true);
         setError(null);
 
-        const params = {};
+        const params = {
+          page: currentPage,
+          limit: currentLimit,
+        };
         if (currentSearch.trim()) params.search = currentSearch.trim();
         if (currentCategory && currentCategory !== 'all') params.category = currentCategory;
         if (currentMinPrice !== '') params.minPrice = currentMinPrice;
@@ -90,6 +104,12 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
         const response = await getProducts(params);
         if (isMounted) {
           setProducts(Array.isArray(response?.data) ? response.data : []);
+          setPagination({
+            page: response?.page || currentPage,
+            limit: response?.limit || currentLimit,
+            total: typeof response?.total === 'number' ? response.total : (response?.data?.length || 0),
+            totalPages: response?.totalPages || 1,
+          });
         }
       } catch (err) {
         if (isMounted) {
@@ -112,6 +132,8 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
       isMounted = false;
     };
   }, [
+    currentPage,
+    currentLimit,
     currentSearch,
     currentCategory,
     currentMinPrice,
@@ -127,6 +149,11 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
       const current = Object.fromEntries(searchParams.entries());
       const merged = { ...current, ...newParams };
 
+      // If modifying a filter other than page itself, reset page back to 1
+      if (!('page' in newParams)) {
+        delete merged.page;
+      }
+
       // Clean empty and default values from URL
       Object.keys(merged).forEach((key) => {
         if (
@@ -134,7 +161,9 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
           merged[key] === null ||
           merged[key] === undefined ||
           (key === 'category' && merged[key] === 'all') ||
-          (key === 'sort' && merged[key] === 'newest')
+          (key === 'sort' && merged[key] === 'newest') ||
+          (key === 'limit' && Number(merged[key]) === 12) ||
+          (key === 'page' && (Number(merged[key]) <= 1 || isNaN(Number(merged[key]))))
         ) {
           delete merged[key];
         }
@@ -144,6 +173,18 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
     },
     [searchParams, setSearchParams]
   );
+
+  // Page change handler
+  const handlePageChange = (newPage) => {
+    if (newPage === currentPage || newPage < 1 || newPage > pagination.totalPages) return;
+    updateUrlFilters({ page: newPage });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Limit change handler
+  const handleLimitChange = (newLimit) => {
+    updateUrlFilters({ limit: newLimit, page: 1 });
+  };
 
   // Debounce search input to avoid spamming the backend
   useEffect(() => {
@@ -274,15 +315,15 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 mb-2">
-            <span>Phase 14</span>
+            <span>Phase 15</span>
             <span>&bull;</span>
-            <span>Search &amp; Dynamic Filters</span>
+            <span>API &amp; Server Pagination</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Products Catalog
           </h1>
           <p className="mt-1 text-sm sm:text-base text-slate-500 dark:text-slate-400">
-            Search, filter by category &amp; price range, and sort products in real time.
+            Search, filter by category &amp; price range, and paginate products server-side.
           </p>
         </div>
 
@@ -291,7 +332,7 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
           <div className="flex items-center gap-2 self-start md:self-auto text-xs font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-indigo-500" />
             <span>
-              {products.length} {products.length === 1 ? 'Product' : 'Products'} found
+              {pagination.total} {pagination.total === 1 ? 'Product' : 'Products'} total
             </span>
           </div>
         )}
@@ -591,14 +632,27 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
           resetLabel="Clear Filters"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+
+          {/* Server-Side Pagination Controls */}
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            limit={pagination.limit}
+            loading={loading}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
+          />
         </div>
       )}
     </div>

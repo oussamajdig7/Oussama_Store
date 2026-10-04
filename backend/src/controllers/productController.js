@@ -5,10 +5,26 @@ const db = require("../config/database");
 // =========================================
 const getAllProducts = (req, res) => {
     try {
-        const { search, category, minPrice, maxPrice, sort } = req.query;
+        const { search, category, minPrice, maxPrice, sort, page, limit } = req.query;
 
-        let sql = `
-            SELECT p.*, c.name AS category_name, c.slug AS category_slug
+        // 1 & 2. Validate page and limit (Requirements 1, 2, 3)
+        let pageNum = parseInt(page, 10);
+        if (isNaN(pageNum) || pageNum < 1) {
+            pageNum = 1;
+        }
+
+        let limitNum = parseInt(limit, 10);
+        if (isNaN(limitNum) || limitNum < 1) {
+            limitNum = 12; // Default limit
+        }
+
+        // 3. Set a reasonable maximum limit (Requirement 3)
+        const MAX_LIMIT = 100;
+        if (limitNum > MAX_LIMIT) {
+            limitNum = MAX_LIMIT;
+        }
+
+        let baseSql = `
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.id
         `;
@@ -16,14 +32,14 @@ const getAllProducts = (req, res) => {
         const conditions = [];
         const params = [];
 
-        // 1. Search product name and description (parameterized)
+        // Search product name and description (parameterized)
         if (search && typeof search === "string" && search.trim() !== "") {
             conditions.push("(p.name LIKE ? OR (p.description IS NOT NULL AND p.description LIKE ?))");
             const term = `%${search.trim()}%`;
             params.push(term, term);
         }
 
-        // 2. Filter by category (slug or id)
+        // Filter by category (slug or id)
         if (category && typeof category === "string" && category.trim() !== "" && category.toLowerCase() !== "all") {
             const catVal = category.trim();
             if (/^\d+$/.test(catVal)) {
@@ -35,7 +51,7 @@ const getAllProducts = (req, res) => {
             }
         }
 
-        // 3. Filter by price range: minPrice
+        // Filter by price range: minPrice
         if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
             const min = Number(minPrice);
             if (!isNaN(min) && min >= 0) {
@@ -44,7 +60,7 @@ const getAllProducts = (req, res) => {
             }
         }
 
-        // 4. Filter by price range: maxPrice
+        // Filter by price range: maxPrice
         if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
             const max = Number(maxPrice);
             if (!isNaN(max) && max >= 0) {
@@ -53,11 +69,21 @@ const getAllProducts = (req, res) => {
             }
         }
 
+        let whereClause = "";
         if (conditions.length > 0) {
-            sql += " WHERE " + conditions.join(" AND ");
+            whereClause = " WHERE " + conditions.join(" AND ");
         }
 
-        // 5. Sorting: price_asc, price_desc, newest, oldest
+        // 4. Calculate total count for pagination metadata
+        const countSql = `SELECT COUNT(*) AS total ${baseSql} ${whereClause}`;
+        const countResult = db.prepare(countSql).get(...params);
+        const total = countResult ? countResult.total : 0;
+        const totalPages = Math.max(1, Math.ceil(total / limitNum));
+
+        // Adjust pageNum if requested page exceeds totalPages (optional safety, or keep user page)
+        const offset = (pageNum - 1) * limitNum;
+
+        // Sorting: price_asc, price_desc, newest, oldest
         let orderClause = "ORDER BY p.id DESC"; // Default newest
         if (sort && typeof sort === "string") {
             switch (sort.trim().toLowerCase()) {
@@ -76,10 +102,18 @@ const getAllProducts = (req, res) => {
                     break;
             }
         }
-        sql += ` ${orderClause}`;
 
-        // Execute parameterized query safely
-        const products = db.prepare(sql).all(...params);
+        // 4. Use SQL LIMIT and OFFSET (Requirement 4)
+        const selectSql = `
+            SELECT p.*, c.name AS category_name, c.slug AS category_slug
+            ${baseSql}
+            ${whereClause}
+            ${orderClause}
+            LIMIT ? OFFSET ?
+        `;
+
+        const queryParams = [...params, limitNum, offset];
+        const products = db.prepare(selectSql).all(...queryParams);
 
         const getImagesStmt = db.prepare(
             "SELECT id, product_id, image_url FROM product_images WHERE product_id = ? ORDER BY id ASC"
@@ -94,8 +128,14 @@ const getAllProducts = (req, res) => {
             };
         });
 
+        // Response structure strictly honoring Phase 15 requirements
         res.status(200).json({
             success: true,
+            data: productsWithImages,
+            page: pageNum,
+            limit: limitNum,
+            total,
+            totalPages,
             count: productsWithImages.length,
             filters: {
                 search: search || null,
@@ -104,7 +144,6 @@ const getAllProducts = (req, res) => {
                 maxPrice: maxPrice || null,
                 sort: sort || "newest",
             },
-            data: productsWithImages,
         });
     } catch (error) {
         console.error("Error fetching products:", error.message);
