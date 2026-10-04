@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import { formatCurrency, getStockBadge } from '../../utils/formatters';
+import AdminImageModal from '../../components/AdminImageModal';
+import { getFullImageUrl } from '../../utils/imageUrl';
 
 export const AdminProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -16,6 +18,7 @@ export const AdminProductsPage = () => {
   const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
   const [currentProduct, setCurrentProduct] = useState(null);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+  const [imageModalProduct, setImageModalProduct] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Form fields
@@ -157,6 +160,20 @@ export const AdminProductsPage = () => {
     }
   };
 
+  const handleImagesUpdated = (productId, updatedImages) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              images: updatedImages,
+              primary_image: updatedImages.length > 0 ? updatedImages[0].image_url : null,
+            }
+          : p
+      )
+    );
+  };
+
   // Filtered products list
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
@@ -270,12 +287,26 @@ export const AdminProductsPage = () => {
               <tbody className="divide-y divide-slate-800/60 font-medium">
                 {filteredProducts.map((product) => {
                   const stockBadge = getStockBadge(product.stock);
+                  const primaryImg = product.primary_image || (product.images && product.images[0]?.image_url);
+
                   return (
                     <tr key={product.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0">
-                            {product.name[0]}
+                          <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 overflow-hidden">
+                            {primaryImg ? (
+                              <img
+                                src={getFullImageUrl(primaryImg)}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              product.name[0]
+                            )}
                           </div>
                           <div>
                             <div className="font-bold text-white text-xs">{product.name}</div>
@@ -301,6 +332,20 @@ export const AdminProductsPage = () => {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => setImageModalProduct(product)}
+                            className="p-1.5 rounded-lg text-slate-300 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
+                            title="Manage Product Images"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {product.images?.length > 0 && (
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
+                                {product.images.length}
+                              </span>
+                            )}
+                          </button>
                           <button
                             onClick={() => openEditModal(product)}
                             className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-400 hover:bg-slate-800 transition-colors cursor-pointer"
@@ -483,6 +528,14 @@ export const AdminProductsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Admin Product Image Upload & Management Modal (Phase 13) */}
+      <AdminImageModal
+        product={imageModalProduct}
+        isOpen={!!imageModalProduct}
+        onClose={() => setImageModalProduct(null)}
+        onImagesUpdated={handleImagesUpdated}
+      />
     </div>
   );
 };

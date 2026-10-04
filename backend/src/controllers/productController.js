@@ -5,25 +5,112 @@ const db = require("../config/database");
 // =========================================
 const getAllProducts = (req, res) => {
     try {
-        const products = db
-            .prepare(
-                `SELECT p.*, c.name AS category_name, c.slug AS category_slug
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 ORDER BY p.id DESC`
-            )
-            .all();
+        const { search, category, minPrice, maxPrice, sort } = req.query;
+
+        let sql = `
+            SELECT p.*, c.name AS category_name, c.slug AS category_slug
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+        `;
+
+        const conditions = [];
+        const params = [];
+
+        // 1. Search product name and description (parameterized)
+        if (search && typeof search === "string" && search.trim() !== "") {
+            conditions.push("(p.name LIKE ? OR (p.description IS NOT NULL AND p.description LIKE ?))");
+            const term = `%${search.trim()}%`;
+            params.push(term, term);
+        }
+
+        // 2. Filter by category (slug or id)
+        if (category && typeof category === "string" && category.trim() !== "" && category.toLowerCase() !== "all") {
+            const catVal = category.trim();
+            if (/^\d+$/.test(catVal)) {
+                conditions.push("(p.category_id = ? OR c.slug = ?)");
+                params.push(Number(catVal), catVal);
+            } else {
+                conditions.push("(c.slug = ? OR LOWER(c.name) = ?)");
+                params.push(catVal.toLowerCase(), catVal.toLowerCase());
+            }
+        }
+
+        // 3. Filter by price range: minPrice
+        if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
+            const min = Number(minPrice);
+            if (!isNaN(min) && min >= 0) {
+                conditions.push("p.price >= ?");
+                params.push(min);
+            }
+        }
+
+        // 4. Filter by price range: maxPrice
+        if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
+            const max = Number(maxPrice);
+            if (!isNaN(max) && max >= 0) {
+                conditions.push("p.price <= ?");
+                params.push(max);
+            }
+        }
+
+        if (conditions.length > 0) {
+            sql += " WHERE " + conditions.join(" AND ");
+        }
+
+        // 5. Sorting: price_asc, price_desc, newest, oldest
+        let orderClause = "ORDER BY p.id DESC"; // Default newest
+        if (sort && typeof sort === "string") {
+            switch (sort.trim().toLowerCase()) {
+                case "price_asc":
+                    orderClause = "ORDER BY p.price ASC, p.id DESC";
+                    break;
+                case "price_desc":
+                    orderClause = "ORDER BY p.price DESC, p.id DESC";
+                    break;
+                case "oldest":
+                    orderClause = "ORDER BY p.id ASC";
+                    break;
+                case "newest":
+                default:
+                    orderClause = "ORDER BY p.id DESC";
+                    break;
+            }
+        }
+        sql += ` ${orderClause}`;
+
+        // Execute parameterized query safely
+        const products = db.prepare(sql).all(...params);
+
+        const getImagesStmt = db.prepare(
+            "SELECT id, product_id, image_url FROM product_images WHERE product_id = ? ORDER BY id ASC"
+        );
+
+        const productsWithImages = products.map((prod) => {
+            const images = getImagesStmt.all(prod.id);
+            return {
+                ...prod,
+                images,
+                primary_image: images.length > 0 ? images[0].image_url : null,
+            };
+        });
 
         res.status(200).json({
             success: true,
-            count: products.length,
-            data: products,
+            count: productsWithImages.length,
+            filters: {
+                search: search || null,
+                category: category || null,
+                minPrice: minPrice || null,
+                maxPrice: maxPrice || null,
+                sort: sort || "newest",
+            },
+            data: productsWithImages,
         });
     } catch (error) {
         console.error("Error fetching products:", error.message);
         res.status(500).json({
             success: false,
-            message: "Internal server error",
+            message: "Internal server error fetching products",
         });
     }
 };
@@ -51,9 +138,19 @@ const getProductById = (req, res) => {
             });
         }
 
+        const images = db
+            .prepare(
+                "SELECT id, product_id, image_url FROM product_images WHERE product_id = ? ORDER BY id ASC"
+            )
+            .all(id);
+
         res.status(200).json({
             success: true,
-            data: product,
+            data: {
+                ...product,
+                images,
+                primary_image: images.length > 0 ? images[0].image_url : null,
+            },
         });
     } catch (error) {
         console.error("Error fetching product:", error.message);

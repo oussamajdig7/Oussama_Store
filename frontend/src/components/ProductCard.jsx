@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { formatCurrency, getStockBadge } from '../utils/formatters';
 import WishlistButton from './WishlistButton';
+import ProductImageGallery from './ProductImageGallery';
+import { getFullImageUrl } from '../utils/imageUrl';
 
 /**
  * Premium Product Card displaying name, price, stock status, category and Add to Cart action.
@@ -10,6 +12,10 @@ export const ProductCard = ({ product, onAddToCart }) => {
   const categoryName = product.category_name || 'General';
   const [adding, setAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+
+  const primaryImage = product.primary_image || (product.images && product.images[0]?.image_url);
+  const hasMultipleImages = product.images && product.images.length > 1;
 
   const handleAdd = async () => {
     if (!onAddToCart || product.stock <= 0) return;
@@ -49,25 +55,53 @@ export const ProductCard = ({ product, onAddToCart }) => {
         </div>
 
         {/* Product Visual Area */}
-        <div className="h-44 w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-800/80 rounded-xl mb-4 flex flex-col items-center justify-center p-4 border border-slate-100 dark:border-slate-800/60 group-hover:scale-[1.01] transition-transform duration-300">
-          <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2">
-            <svg
-              className="w-7 h-7"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-          </div>
-          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            {product.slug || 'product'}
-          </span>
+        <div
+          onClick={() => setIsGalleryOpen(true)}
+          className="relative h-44 w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-800/80 rounded-xl mb-4 flex flex-col items-center justify-center p-2 border border-slate-100 dark:border-slate-800/60 overflow-hidden cursor-pointer group-hover:scale-[1.01] transition-transform duration-300"
+          title="Click to view product image gallery"
+        >
+          {primaryImage ? (
+            <img
+              src={getFullImageUrl(primaryImage)}
+              alt={product.name}
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2">
+                <svg
+                  className="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+              </div>
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {product.slug || 'product'}
+              </span>
+            </div>
+          )}
+
+          {/* Photo Gallery Indicator Badge */}
+          {hasMultipleImages && (
+            <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/70 text-white backdrop-blur-xs flex items-center gap-1 shadow-sm">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>{product.images.length}</span>
+            </span>
+          )}
         </div>
 
         {/* Product Name */}
@@ -140,6 +174,58 @@ export const ProductCard = ({ product, onAddToCart }) => {
           </button>
         )}
       </div>
+
+      {/* Product Image Gallery Modal (Phase 13) */}
+      {isGalleryOpen && (
+        <div
+          onClick={() => setIsGalleryOpen(false)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {product.name}
+                </h3>
+                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                  {categoryName} &bull; {formatCurrency(product.price)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGalleryOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg text-lg font-bold cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <ProductImageGallery
+              images={
+                product.images && product.images.length > 0
+                  ? product.images
+                  : primaryImage
+                  ? [{ id: 1, image_url: primaryImage }]
+                  : []
+              }
+              productName={product.name}
+            />
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsGalleryOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer"
+              >
+                Close Gallery
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 };

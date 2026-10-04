@@ -74,6 +74,26 @@ export const adminService = {
     const response = await api.delete(`/categories/${id}`);
     return response.data;
   },
+
+  // Product Images management (Phase 13)
+  getProductImages: async (productId) => {
+    const response = await api.get(`/products/${productId}/images`);
+    return response.data;
+  },
+
+  uploadProductImages: async (productId, formData) => {
+    const response = await api.post(`/products/${productId}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  deleteProductImage: async (productId, imageId) => {
+    const response = await api.delete(`/products/${productId}/images/${imageId}`);
+    return response.data;
+  },
 };
 
 export default adminService;

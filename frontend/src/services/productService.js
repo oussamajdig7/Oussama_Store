@@ -22,9 +22,21 @@ export const getProductById = async (id) => {
   return response.data;
 };
 
+/**
+ * Fetch all gallery images for a specific product.
+ * 
+ * @param {number|string} id - Product ID
+ * @returns {Promise<Object>} API response { success: true, count: number, data: Image[] }
+ */
+export const getProductImages = async (id) => {
+  const response = await api.get(`/products/${id}/images`);
+  return response.data;
+};
+
 const productService = {
   getProducts,
   getProductById,
+  getProductImages,
 };
 
 export default productService;
