@@ -176,7 +176,7 @@ const updateUserRole = (req, res) => {
             });
         }
 
-        const user = db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+        const user = db.prepare("SELECT id, role FROM users WHERE id = ?").get(id);
 
         if (!user) {
             return res.status(404).json({

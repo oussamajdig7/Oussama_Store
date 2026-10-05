@@ -6,13 +6,17 @@ import { WishlistContext } from '../context/WishlistContext';
  * 
  * @returns {{
  *   wishlist: Array,
+ *   items: Array,
  *   loading: boolean,
  *   error: string|null,
  *   isInWishlist: Function,
  *   addToWishlist: Function,
+ *   add: Function,
  *   removeFromWishlist: Function,
+ *   remove: Function,
  *   toggleWishlist: Function,
- *   refreshWishlist: Function
+ *   refreshWishlist: Function,
+ *   refresh: Function
  * }}
  */
 export const useWishlist = () => {

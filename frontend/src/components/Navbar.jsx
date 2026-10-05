@@ -46,7 +46,7 @@ export const Navbar = ({ currentView, onNavigate, onRefresh, loading }) => {
                   Oussama Store
                 </span>
                 <span className="hidden sm:inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                  Phase 11
+                  Phase 16
                 </span>
               </div>
             </button>

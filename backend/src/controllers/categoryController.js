@@ -59,7 +59,16 @@ const getCategoryById = (req, res) => {
 // =========================================
 const createCategory = (req, res) => {
     try {
-        const { name, slug } = req.body;
+        let { name, slug } = req.body;
+
+        // Auto-generate slug from name if not provided
+        if (!slug && name) {
+            slug = name
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
+        }
 
         // Validate required fields
         if (!name || !slug) {
@@ -105,7 +114,7 @@ const createCategory = (req, res) => {
 const updateCategory = (req, res) => {
     try {
         const { id } = req.params;
-        const { name, slug } = req.body;
+        let { name, slug } = req.body;
 
         // Check if category exists
         const existing = db
@@ -119,17 +128,19 @@ const updateCategory = (req, res) => {
             });
         }
 
-        // Validate required fields
-        if (!name || !slug) {
-            return res.status(400).json({
-                success: false,
-                message: "Fields 'name' and 'slug' are required",
-            });
+        const targetName = name !== undefined ? name : existing.name;
+        let targetSlug = slug !== undefined ? slug : existing.slug;
+        if (!targetSlug && targetName) {
+            targetSlug = targetName
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
         }
 
         db.prepare(
             "UPDATE categories SET name = ?, slug = ? WHERE id = ?"
-        ).run(name, slug, id);
+        ).run(targetName, targetSlug, id);
 
         const updatedCategory = db
             .prepare("SELECT * FROM categories WHERE id = ?")

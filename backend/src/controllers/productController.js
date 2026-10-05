@@ -205,7 +205,16 @@ const getProductById = (req, res) => {
 // =========================================
 const createProduct = (req, res) => {
     try {
-        const { category_id, name, slug, description, price, stock } = req.body;
+        let { category_id, name, slug, description, price, stock } = req.body;
+
+        // Auto-generate slug from name if not provided
+        if (!slug && name) {
+            slug = name
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
+        }
 
         // Validate required fields
         if (!category_id || !name || !slug || price === undefined || price === null) {
@@ -308,40 +317,48 @@ const updateProduct = (req, res) => {
             });
         }
 
-        // Validate required fields
-        if (!category_id || !name || !slug || price === undefined || price === null) {
-            return res.status(400).json({
-                success: false,
-                message: "Fields 'category_id', 'name', 'slug' and 'price' are required",
-            });
+        const targetCategoryId = category_id !== undefined ? category_id : existing.category_id;
+        const targetName = name !== undefined ? name : existing.name;
+        let targetSlug = slug !== undefined ? slug : existing.slug;
+        if (!targetSlug && targetName) {
+            targetSlug = targetName
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
         }
+        const targetDescription = description !== undefined ? description : existing.description;
+        const targetPrice = price !== undefined ? price : existing.price;
+        const targetStock = stock !== undefined ? stock : existing.stock;
 
-        // Validate price
-        if (typeof price !== "number" || price < 0) {
+        // Validate price if updated
+        if (targetPrice !== undefined && (typeof targetPrice !== "number" || targetPrice < 0)) {
             return res.status(400).json({
                 success: false,
                 message: "Price must be a positive number",
             });
         }
 
-        // Validate stock if provided
-        if (stock !== undefined && stock !== null && (typeof stock !== "number" || stock < 0 || !Number.isInteger(stock))) {
+        // Validate stock if updated
+        if (targetStock !== undefined && (typeof targetStock !== "number" || targetStock < 0 || !Number.isInteger(targetStock))) {
             return res.status(400).json({
                 success: false,
                 message: "Stock must be a non-negative integer",
             });
         }
 
-        // Verify category exists
-        const category = db
-            .prepare("SELECT id FROM categories WHERE id = ?")
-            .get(category_id);
+        // Verify category exists if changed
+        if (category_id !== undefined) {
+            const category = db
+                .prepare("SELECT id FROM categories WHERE id = ?")
+                .get(targetCategoryId);
 
-        if (!category) {
-            return res.status(400).json({
-                success: false,
-                message: "Category not found. Invalid category_id",
-            });
+            if (!category) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Category not found. Invalid category_id",
+                });
+            }
         }
 
         db.prepare(
@@ -349,12 +366,12 @@ const updateProduct = (req, res) => {
              SET category_id = ?, name = ?, slug = ?, description = ?, price = ?, stock = ?, updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`
         ).run(
-            category_id,
-            name,
-            slug,
-            description || null,
-            price,
-            stock !== undefined && stock !== null ? stock : 0,
+            targetCategoryId,
+            targetName,
+            targetSlug,
+            targetDescription || null,
+            targetPrice,
+            targetStock,
             id
         );
 

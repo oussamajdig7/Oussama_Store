@@ -6,8 +6,12 @@ import { AuthContext } from '../context/AuthContext';
  * 
  * @returns {{
  *   user: Object|null,
+ *   currentUser: Object|null,
  *   setUser: Function,
  *   loading: boolean,
+ *   error: string|null,
+ *   login: Function,
+ *   register: Function,
  *   logout: Function,
  *   isAuthenticated: boolean
  * }}

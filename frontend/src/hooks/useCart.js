@@ -6,9 +6,13 @@ import { CartContext } from '../context/CartContext';
  * 
  * @returns {{
  *   cart: { items: Array, total_quantity: number, total: number },
+ *   items: Array,
+ *   total: number,
+ *   total_quantity: number,
  *   loading: boolean,
  *   error: string|null,
  *   addToCart: Function,
+ *   addItem: Function,
  *   updateQuantity: Function,
  *   removeItem: Function,
  *   clearCart: Function,

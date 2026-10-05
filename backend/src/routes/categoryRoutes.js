@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const adminMiddleware = require("../middleware/adminMiddleware");
+const validate = require("../middleware/validate");
+const {
+    createCategorySchema,
+    updateCategorySchema,
+} = require("../schemas/categorySchemas");
+const { idParamSchema } = require("../schemas/commonSchemas");
 
 const {
     getAllCategories,
@@ -11,9 +17,9 @@ const {
 } = require("../controllers/categoryController");
 
 router.get("/", getAllCategories);
-router.get("/:id", getCategoryById);
-router.post("/", adminMiddleware, createCategory);
-router.put("/:id", adminMiddleware, updateCategory);
-router.delete("/:id", adminMiddleware, deleteCategory);
+router.get("/:id", validate({ params: idParamSchema }), getCategoryById);
+router.post("/", adminMiddleware, validate({ body: createCategorySchema }), createCategory);
+router.put("/:id", adminMiddleware, validate({ params: idParamSchema, body: updateCategorySchema }), updateCategory);
+router.delete("/:id", adminMiddleware, validate({ params: idParamSchema }), deleteCategory);
 
 module.exports = router;
