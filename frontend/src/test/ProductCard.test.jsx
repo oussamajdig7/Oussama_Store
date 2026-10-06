@@ -1,16 +1,19 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { ProductCard } from '../components/ProductCard';
 import { WishlistProvider } from '../context/WishlistContext';
 import { AuthProvider } from '../context/AuthContext';
 
 function renderProductCard(product, onAddToCart = vi.fn()) {
   return render(
-    <AuthProvider>
-      <WishlistProvider>
-        <ProductCard product={product} onAddToCart={onAddToCart} />
-      </WishlistProvider>
-    </AuthProvider>
+    <MemoryRouter>
+      <AuthProvider>
+        <WishlistProvider>
+          <ProductCard product={product} onAddToCart={onAddToCart} />
+        </WishlistProvider>
+      </AuthProvider>
+    </MemoryRouter>
   );
 }
 

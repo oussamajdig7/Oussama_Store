@@ -8,6 +8,7 @@ import Pagination from '../components/Pagination';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import EmptyState from '../components/EmptyState';
+import SEO from '../components/SEO';
 import { formatCurrency } from '../utils/formatters';
 
 /**
@@ -276,8 +277,62 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
     setLocalTrigger((prev) => prev + 1);
   }, []);
 
+  // SEO metadata calculations
+  const activeCategoryObj = categories.find(
+    (c) => c.slug === currentCategory || String(c.id) === String(currentCategory)
+  );
+
+  const pageTitle = currentSearch
+    ? `Search: "${currentSearch}"`
+    : activeCategoryObj
+    ? `${activeCategoryObj.name} Catalog`
+    : 'Shop Premium Tech & Electronics Catalog';
+
+  const pageDescription = activeCategoryObj
+    ? `Explore our curated selection of ${activeCategoryObj.name.toLowerCase()} at Oussama Store. High quality, competitive pricing, and express delivery.`
+    : currentSearch
+    ? `Search results for "${currentSearch}" at Oussama Store. Find top-tier electronics and accessories.`
+    : 'Discover premium smartphones, laptops, audio gear, and smart accessories at Oussama Store with fast shipping, warranty, and secure checkout.';
+
+  // Structured Data schemas
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Oussama Store',
+    url: 'https://oussamastore.com',
+    logo: 'https://oussamastore.com/favicon.svg',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'support@oussamastore.com',
+    },
+    sameAs: [
+      'https://twitter.com/oussamastore',
+      'https://github.com/oussamajdig7/Oussama_Store',
+    ],
+  };
+
+  const webSiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Oussama Store',
+    url: 'https://oussamastore.com/',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://oussamastore.com/?search={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        canonical="https://oussamastore.com/"
+        structuredData={[organizationSchema, webSiteSchema]}
+      />
+      <div className="space-y-8">
       {/* Toast Notification Banner */}
       {notification && (
         <div
@@ -656,6 +711,7 @@ export const ProductsPage = ({ refreshTrigger = 0, onNavigateToCart }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

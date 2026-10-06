@@ -1,4 +1,5 @@
 import { formatCurrency } from '../utils/formatters';
+import SEO from '../components/SEO';
 
 /**
  * OrderConfirmationPage: Displays order receipt and confirmation after successful checkout.
@@ -6,26 +7,39 @@ import { formatCurrency } from '../utils/formatters';
 export const OrderConfirmationPage = ({ order, onNavigateToOrders, onNavigateToProducts, onNavigateToOrderDetails }) => {
   if (!order) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Order Information</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Unable to find the order confirmation details.
-        </p>
-        <button
-          type="button"
-          onClick={onNavigateToProducts}
-          className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs"
-        >
-          Return to Catalog
-        </button>
-      </div>
+      <>
+        <SEO
+          title="Order Confirmation"
+          description="Order confirmation details."
+          noindex={true}
+        />
+        <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Order Information</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+            Unable to find the order confirmation details.
+          </p>
+          <button
+            type="button"
+            onClick={onNavigateToProducts}
+            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs"
+          >
+            Return to Catalog
+          </button>
+        </div>
+      </>
     );
   }
 
   const items = order.items || [];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <>
+      <SEO
+        title={`Order #${order.id} Confirmed`}
+        description={`Your order #${order.id} has been placed successfully at Oussama Store.`}
+        noindex={true}
+      />
+      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Success Hero */}
       <div className="text-center py-6">
         <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shadow-xs">
@@ -151,6 +165,7 @@ export const OrderConfirmationPage = ({ order, onNavigateToOrders, onNavigateToP
         </button>
       </div>
     </div>
+    </>
   );
 };
 

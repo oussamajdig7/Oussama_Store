@@ -102,7 +102,7 @@ export const ProductImageGallery = ({ images = [], productName = 'Product' }) =>
               >
                 <img
                   src={thumbUrl}
-                  alt={`Thumbnail ${idx + 1}`}
+                  alt={`${productName} thumbnail ${idx + 1}`}
                   className="w-full h-full object-cover"
                 />
               </button>

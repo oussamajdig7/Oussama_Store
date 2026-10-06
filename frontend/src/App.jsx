@@ -8,6 +8,7 @@ import {
   useParams,
   Navigate,
 } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -17,6 +18,8 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 
 import ProductsPage from './pages/ProductsPage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import CartPage from './pages/CartPage';
 import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -113,6 +116,7 @@ function AppRoutes() {
     if (p === '/orders') return 'orders';
     if (p.startsWith('/orders/')) return 'order-details';
     if (p === '/order-confirmation') return 'order-confirmation';
+    if (p.startsWith('/products/')) return 'product-detail';
     return 'products';
   };
 
@@ -198,6 +202,21 @@ function AppRoutes() {
       <Route
         path="/products"
         element={<Navigate to="/" replace />}
+      />
+
+      <Route
+        path="/products/:slug"
+        element={
+          <MainLayout
+            currentView={getCurrentPublicView()}
+            onNavigate={handleNavigate}
+            onRefresh={handleRefresh}
+          >
+            <ProductDetailsPage
+              onNavigateToCart={() => handleNavigate('cart')}
+            />
+          </MainLayout>
+        }
       />
 
       <Route
@@ -297,26 +316,39 @@ function AppRoutes() {
         }
       />
 
-      {/* Catch-all route -> redirect to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all 404 Route */}
+      <Route
+        path="*"
+        element={
+          <MainLayout
+            currentView="not-found"
+            onNavigate={handleNavigate}
+            onRefresh={handleRefresh}
+          >
+            <NotFoundPage />
+          </MainLayout>
+        }
+      />
     </Routes>
   );
 }
 
 /**
- * Root App Component wrapped with Router, Auth, Cart, and Wishlist Providers.
+ * Root App Component wrapped with Helmet, Router, Auth, Cart, and Wishlist Providers.
  */
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <AppRoutes />
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AppRoutes />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

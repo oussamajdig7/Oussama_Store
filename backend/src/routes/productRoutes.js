@@ -11,11 +11,13 @@ const {
 const {
     idParamSchema,
     productImageParamsSchema,
+    slugParamSchema,
 } = require("../schemas/commonSchemas");
 
 const {
     getAllProducts,
     getProductById,
+    getProductBySlug,
     createProduct,
     updateProduct,
     deleteProduct,
@@ -29,6 +31,7 @@ const {
 
 // Standard catalog routes with validation
 router.get("/", validate({ query: productQuerySchema }), getAllProducts);
+router.get("/slug/:slug", validate({ params: slugParamSchema }), getProductBySlug);
 router.get("/:id", validate({ params: idParamSchema }), getProductById);
 router.post("/", adminMiddleware, validate({ body: createProductSchema }), createProduct);
 router.put("/:id", adminMiddleware, validate({ params: idParamSchema, body: updateProductSchema }), updateProduct);

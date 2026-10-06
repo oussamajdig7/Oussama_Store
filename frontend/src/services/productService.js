@@ -23,6 +23,17 @@ export const getProductById = async (id) => {
 };
 
 /**
+ * Fetch a single product by its slug (SEO-friendly URL identifier).
+ * 
+ * @param {string} slug - Product Slug (e.g. 'iphone-15-pro')
+ * @returns {Promise<Object>} API response { success: true, data: Product }
+ */
+export const getProductBySlug = async (slug) => {
+  const response = await api.get(`/products/slug/${slug}`);
+  return response.data;
+};
+
+/**
  * Fetch all gallery images for a specific product.
  * 
  * @param {number|string} id - Product ID
@@ -36,7 +47,9 @@ export const getProductImages = async (id) => {
 const productService = {
   getProducts,
   getProductById,
+  getProductBySlug,
   getProductImages,
 };
 
 export default productService;
+

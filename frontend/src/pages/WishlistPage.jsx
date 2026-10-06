@@ -3,6 +3,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency, getStockBadge } from '../utils/formatters';
+import SEO from '../components/SEO';
 
 /**
  * WishlistPage: Displays the user's saved wishlist items with options to remove or move to cart.
@@ -78,7 +79,13 @@ export const WishlistPage = ({ onNavigateToProducts, onNavigateToCart }) => {
   // 1. Unauthenticated State
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
+      <>
+        <SEO
+          title="My Wishlist"
+          description="Sign in to view and manage your saved wishlist items at Oussama Store."
+          noindex={true}
+        />
+        <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
         <div className="w-16 h-16 mx-auto mb-4 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -138,13 +145,20 @@ export const WishlistPage = ({ onNavigateToProducts, onNavigateToCart }) => {
           </button>
         </form>
       </div>
+      </>
     );
   }
 
   const isEmpty = wishlist.length === 0;
 
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title={wishlist.length > 0 ? `My Wishlist (${wishlist.length} items)` : 'My Wishlist'}
+        description="View and manage your saved tech favorites and wishlist products at Oussama Store."
+        noindex={true}
+      />
+      <div className="space-y-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
@@ -317,6 +331,7 @@ export const WishlistPage = ({ onNavigateToProducts, onNavigateToCart }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

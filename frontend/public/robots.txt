@@ -1,0 +1,16 @@
+# robots.txt for Oussama Store
+User-agent: *
+Allow: /
+Allow: /products/
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /order-confirmation
+Disallow: /wishlist
+
+# Host
+Host: https://oussamastore.com
+
+# Sitemap
+Sitemap: https://oussamastore.com/sitemap.xml

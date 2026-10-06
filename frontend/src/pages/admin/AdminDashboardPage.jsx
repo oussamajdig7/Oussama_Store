@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import { formatCurrency, getOrderStatusBadge } from '../../utils/formatters';
+import SEO from '../../components/SEO';
 
 export const AdminDashboardPage = ({ onNavigate }) => {
   const [stats, setStats] = useState(null);
@@ -152,7 +153,13 @@ export const AdminDashboardPage = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title="Admin Dashboard"
+        description="Admin dashboard and analytics management for Oussama Store."
+        noindex={true}
+      />
+      <div className="space-y-8">
       {/* Header & Quick Action Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -383,6 +390,7 @@ export const AdminDashboardPage = ({ onNavigate }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -201,6 +201,52 @@ const getProductById = (req, res) => {
 };
 
 // =========================================
+// GET /api/products/slug/:slug
+// =========================================
+const getProductBySlug = (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        const product = db
+            .prepare(
+                `SELECT p.*, c.name AS category_name, c.slug AS category_slug
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.slug = ?`
+            )
+            .get(slug);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        const images = db
+            .prepare(
+                "SELECT id, product_id, image_url FROM product_images WHERE product_id = ? ORDER BY id ASC"
+            )
+            .all(product.id);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                ...product,
+                images,
+                primary_image: images.length > 0 ? images[0].image_url : null,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching product by slug:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+// =========================================
 // POST /api/products
 // =========================================
 const createProduct = (req, res) => {
@@ -443,6 +489,7 @@ const deleteProduct = (req, res) => {
 module.exports = {
     getAllProducts,
     getProductById,
+    getProductBySlug,
     createProduct,
     updateProduct,
     deleteProduct,

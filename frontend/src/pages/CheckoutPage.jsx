@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCart } from '../hooks/useCart';
 import { createOrder } from '../services/orderService';
 import { formatCurrency } from '../utils/formatters';
+import SEO from '../components/SEO';
 
 /**
  * CheckoutPage: Collects shipping address, reviews order summary, and completes checkout.
@@ -61,31 +62,44 @@ export const CheckoutPage = ({ onOrderSuccess, onNavigateToCart }) => {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
-        <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center">
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
+      <>
+        <SEO
+          title="Checkout"
+          description="Secure checkout at Oussama Store."
+          noindex={true}
+        />
+        <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Your Cart is Empty
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+            Add some products to your cart before proceeding to checkout.
+          </p>
+          <button
+            type="button"
+            onClick={onNavigateToCart}
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors"
+          >
+            View Cart
+          </button>
         </div>
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-          Your Cart is Empty
-        </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Add some products to your cart before proceeding to checkout.
-        </p>
-        <button
-          type="button"
-          onClick={onNavigateToCart}
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors"
-        >
-          View Cart
-        </button>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title="Secure Checkout"
+        description="Provide your delivery details to place your order securely with server-side validation at Oussama Store."
+        noindex={true}
+      />
+      <div className="space-y-8">
       {/* Header */}
       <div className="pb-6 border-b border-slate-200 dark:border-slate-800">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 mb-2">
@@ -315,6 +329,7 @@ export const CheckoutPage = ({ onOrderSuccess, onNavigateToCart }) => {
         </div>
       </form>
     </div>
+    </>
   );
 };
 

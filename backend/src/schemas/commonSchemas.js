@@ -28,8 +28,14 @@ const productImageParamsSchema = z.object({
         .positive("Image ID must be a positive integer"),
 });
 
+const slugParamSchema = z.object({
+    slug: z.string().trim().min(1, "Slug is required").max(150),
+});
+
 module.exports = {
     idParamSchema,
     productIdParamSchema,
     productImageParamsSchema,
+    slugParamSchema,
 };
+

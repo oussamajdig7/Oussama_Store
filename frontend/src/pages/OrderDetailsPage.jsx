@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getOrderById } from '../services/orderService';
 import { formatCurrency } from '../utils/formatters';
+import SEO from '../components/SEO';
 
 const STATUS_STEPS = ['pending', 'confirmed', 'shipped', 'delivered'];
 
@@ -75,7 +76,13 @@ export const OrderDetailsPage = ({ orderId, onNavigateBack }) => {
   const currentStatusIndex = STATUS_STEPS.indexOf(order.status?.toLowerCase());
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
+    <>
+      <SEO
+        title={`Order #${orderId} Details`}
+        description={`Track shipping, items, and delivery status for order #${orderId} at Oussama Store.`}
+        noindex={true}
+      />
+      <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
       {/* Header and Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
@@ -220,6 +227,7 @@ export const OrderDetailsPage = ({ orderId, onNavigateBack }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

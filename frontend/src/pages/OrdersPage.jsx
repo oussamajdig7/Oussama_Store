@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getOrders } from '../services/orderService';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/formatters';
+import SEO from '../components/SEO';
 
 const getStatusBadge = (status) => {
   switch (status?.toLowerCase()) {
@@ -103,53 +104,66 @@ export const OrdersPage = ({ onSelectOrder, onNavigateToProducts }) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Order History</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Sign in to view your past purchases and track order deliveries.
-        </p>
+      <>
+        <SEO
+          title="My Orders"
+          description="Sign in to view your order history and track shipments at Oussama Store."
+          noindex={true}
+        />
+        <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Order History</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+            Sign in to view your past purchases and track order deliveries.
+          </p>
 
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-400">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-400">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleLogin} className="space-y-3 text-left">
-          <div>
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loggingIn}
-            className="w-full mt-4 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors"
-          >
-            {loggingIn ? 'Signing in...' : 'Sign In to View Orders'}
-          </button>
-        </form>
-      </div>
+          <form onSubmit={handleLogin} className="space-y-3 text-left">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loggingIn}
+              className="w-full mt-4 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors"
+            >
+              {loggingIn ? 'Signing in...' : 'Sign In to View Orders'}
+            </button>
+          </form>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title="My Orders"
+        description="View and track your previous orders placed at Oussama Store."
+        noindex={true}
+      />
+      <div className="space-y-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
@@ -262,6 +276,7 @@ export const OrdersPage = ({ onSelectOrder, onNavigateToProducts }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

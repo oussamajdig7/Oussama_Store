@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../context/AuthContext';
 import CartItem from '../components/CartItem';
+import SEO from '../components/SEO';
 import { formatCurrency } from '../utils/formatters';
 
 /**
@@ -73,7 +74,13 @@ export const CartPage = ({ onNavigateToProducts, onNavigateToCheckout }) => {
   // 1. Unauthenticated State
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
+      <>
+        <SEO
+          title="Shopping Cart"
+          description="Sign in to view items in your shopping cart at Oussama Store."
+          noindex={true}
+        />
+        <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm text-center">
         <div className="w-16 h-16 mx-auto mb-4 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -133,6 +140,7 @@ export const CartPage = ({ onNavigateToProducts, onNavigateToCheckout }) => {
           </button>
         </form>
       </div>
+      </>
     );
   }
 
@@ -140,7 +148,13 @@ export const CartPage = ({ onNavigateToProducts, onNavigateToCheckout }) => {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="space-y-8">
+    <>
+      <SEO
+        title={cart?.total_quantity ? `Shopping Cart (${cart.total_quantity} items)` : 'Shopping Cart'}
+        description="Review items in your shopping cart, manage quantities, and proceed to checkout at Oussama Store."
+        noindex={true}
+      />
+      <div className="space-y-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
@@ -305,6 +319,7 @@ export const CartPage = ({ onNavigateToProducts, onNavigateToCheckout }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

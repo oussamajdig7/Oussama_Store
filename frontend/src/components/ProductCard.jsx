@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { formatCurrency, getStockBadge } from '../utils/formatters';
 import WishlistButton from './WishlistButton';
 import ProductImageGallery from './ProductImageGallery';
@@ -106,7 +107,9 @@ export const ProductCard = ({ product, onAddToCart }) => {
 
         {/* Product Name */}
         <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-          {product.name}
+          <Link to={`/products/${product.slug || product.id}`} className="hover:underline">
+            {product.name}
+          </Link>
         </h3>
 
         {/* Product Description */}
